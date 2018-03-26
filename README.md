@@ -6,8 +6,8 @@ Corpus : NLTK Gutenberg
 1. Generate Character and Word level language model using PyTorch (CUDA enabled for gpu optimization)
 
 example :
-python3.6 main.py --cuda --model_type 'char' --emsize 128 --nhid 128 --bptt 50
-python3.6 main.py --cuda --model_type 'word' --emsize 300 --nhid 300 --bptt 10
+a. python3.6 main.py --cuda --model_type 'char' --emsize 128 --nhid 128 --bptt 50
+b. python3.6 main.py --cuda --model_type 'word' --emsize 300 --nhid 300 --bptt 10
 
 More help : python main.py -h
 
@@ -46,8 +46,8 @@ optional arguments:
 2. Generate the sentences from saved models
 
 example: 
-python3.6 generate_sentence.py --cuda --model_type 'char' --words 100
-python3.6 generate_sentence.py --cuda --model_type 'word' --words 20
+a. python3.6 generate_sentence.py --cuda --model_type 'char' --words 100
+b. python3.6 generate_sentence.py --cuda --model_type 'word' --words 20
 
 PyTorch Gutenberg Character level or Word level RNN/LSTM Language Model
 
