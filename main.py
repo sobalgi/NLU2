@@ -1,4 +1,22 @@
 # coding: utf-8
+'''
+
+NLU Assignment 2 : LSTM Based Character and Word Level Language Model Implementation
+
+Name  : Sourabh Balgi
+SR No : 14318
+Dept  : EE 
+Prog  : M Tech Systems Engineering
+Date  : 22-03-2018 9:00:00 PM
+
+'''
+
+# main.py : Main file for data processing and training the model
+# Model generation commands
+# Example :
+# python3.6 main.py --cuda --model_type 'char' --emsize 128 --nhid 128 --bptt 50
+# python3.6 main.py --cuda --model_type 'word' --emsize 300 --nhid 300 --bptt 10
+
 import argparse
 import time
 import math
@@ -25,9 +43,9 @@ parser.add_argument('--modelname', type=str,  default='model.pt',
                     help='path to save the final model')
 parser.add_argument('--corpusname', type=str,  default='corpus.pkl',
                     help='name of the file for storing corpus object')
-parser.add_argument('--emsize', type=int, default=300,
+parser.add_argument('--emsize', type=int, default=200,
                     help='size of word embeddings')
-parser.add_argument('--nhid', type=int, default=300,
+parser.add_argument('--nhid', type=int, default=200,
                     help='number of hidden units per layer')
 parser.add_argument('--nlayers', type=int, default=2,
                     help='number of layers')
@@ -35,13 +53,13 @@ parser.add_argument('--bptt', type=int, default=50,
                     help='sequence length')
 parser.add_argument('--batch_size', type=int, default=50, metavar='N',
                     help='batch size')
-parser.add_argument('--lr', type=float, default=8,
+parser.add_argument('--lr', type=float, default=10,
                     help='initial learning rate')
-parser.add_argument('--lr_decay', type=float, default=.8,
+parser.add_argument('--lr_decay', type=float, default=.9,
                     help='decay factor for learning rate')
 parser.add_argument('--clip', type=float, default=0.25,
                     help='gradient clipping')
-parser.add_argument('--epochs', type=int, default=20,
+parser.add_argument('--epochs', type=int, default=40,
                     help='upper epoch limit')
 parser.add_argument('--dropout', type=float, default=0.2,
                     help='dropout applied to layers (0 = no dropout)')
@@ -54,6 +72,8 @@ parser.add_argument('--cuda', action='store_true',
 parser.add_argument('--log-interval', type=int, default=200, metavar='N',
                     help='report interval')
 args = parser.parse_args()
+
+print("Generating %s level LSTM Language model ..."%(args.model_type))
 
 # Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
@@ -78,15 +98,16 @@ else:
     corpus_file.close()
     print("End   : Loading previously saved corpus object from save directory ...")
 
+corpus.args = args
 
 # Starting from sequential data, batchify arranges the dataset into columns.
 # For instance, with the alphabet as the sequence and batch size 4, we'd get
-# ┌ a g m s ┐
-# │ b h n t │
-# │ c i o u │
-# │ d j p v │
-# │ e k q w │
-# └ f l r x ┘.
+# | a g m s |
+# | b h n t |
+# | c i o u |
+# | d j p v |
+# | e k q w |
+# | f l r x |.
 # These columns are treated as independent by the model, which means that the
 # dependence of e. g. 'g' on 'f' can not be learned, but allows more efficient
 # batch processing.
@@ -135,8 +156,8 @@ def repackage_hidden(h):
 # get_batch subdivides the source data into chunks of length args.bptt.
 # If source is equal to the example output of the batchify function, with
 # a bptt-limit of 2, we'd get the following two Variables for i = 0:
-# ┌ a g m s ┐ ┌ b h n t ┐
-# └ b h n t ┘ └ c i o u ┘
+# | a g m s | | b h n t |
+# | b h n t | | c i o u |
 # Note that despite the name of the function, the subdivison of data is not
 # done along the batch dimension (i.e. dimension 1), since that was handled
 # by the batchify function. The chunks are along dimension 0, corresponding
@@ -166,7 +187,7 @@ def evaluate(data_source):
 # def shuffle_tensor(tensor):
 #     return tensor.index(1,torch.randperm(tensor.size(1)).long())
 
-def train(train_data):
+def train():
     # Turn on training mode which enables dropout.
     model.train()
     total_loss = 0
@@ -174,7 +195,6 @@ def train(train_data):
     ntokens = corpus.dictionary.__len__()
     hidden = model.init_hidden(args.batch_size)
     for batch, i in enumerate(range(0, train_data.size(0) - 1, args.bptt)):
-        train_data = train_data[torch.randperm(train_data.size(1))]
         data, targets = get_batch(train_data, i)
         # Starting each batch, we detach the hidden state from how it was previously produced.
         # If we didn't, the model would try backpropagating all the way to start of the dataset.
@@ -210,7 +230,7 @@ try:
     train_start_time = time.time()
     for epoch in range(1, args.epochs+1):
         epoch_start_time = time.time()
-        train(train_data)
+        train()
         val_loss = evaluate(dev_data)
         print('-' * 89)
         print('| end of epoch {:3d} | time: {:5.2f}s | valid loss {:5.2f} | '
@@ -220,7 +240,8 @@ try:
         # Save the model if the validation loss is the best we've seen so far.
         if not best_val_loss or val_loss < best_val_loss:
             with open(save_dir_path + args.modelname, 'wb') as f:
-                torch.save(model, f)
+                torch.save(model.cpu(), f) # save as a cpu model
+                model.cuda()
             best_val_loss = val_loss
         else:
             # Anneal the learning rate if no improvement has been seen in the validation dataset.
@@ -231,7 +252,7 @@ except KeyboardInterrupt:
     print('Exiting from training early')
 
 print('-' * 89)
-print('| total training time: {:7.2f}s |'.format(epoch, (time.time() - train_start_time)))
+print('| total training time for {:3d} epochs : {:7.2f}s |'.format(epoch, (time.time() - train_start_time)))
 print('-' * 89)
 
 # Load the best saved model.

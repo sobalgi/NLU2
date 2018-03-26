@@ -1,3 +1,21 @@
+'''
+
+NLU Assignment 2 : LSTM Based Character and Word Level Language Model Implementation
+
+Name  : Sourabh Balgi
+SR No : 14318
+Dept  : EE 
+Prog  : M Tech Systems Engineering
+Date  : 22-03-2018 9:00:00 PM
+
+'''
+
+# generate_sentence.py : Generate sentence from the pre trained language model
+# Model generation commands
+# Example :
+# python3.6 generate_sentence.py --cuda --model_type 'char' --words 100
+# python3.6 generate_sentence.py --cuda --model_type 'word' --words 20
+
 import argparse
 import os
 import torch
@@ -19,21 +37,21 @@ parser.add_argument('--corpusname', type=str,  default='corpus.pkl',
                     help='name of the file for storing corpus object')
 parser.add_argument('--outf', type=str, default='generated.txt',
                     help='output file for generated text')
-parser.add_argument('--words', type=int, default='200',
+parser.add_argument('--words', type=int, default='100',
                     help='number of words to generate')
 parser.add_argument('--seed', type=int, default=566,
                     help='random seed')
-parser.add_argument('--startin', type=str, default='name of the king',
+parser.add_argument('--startin', type=str, default='The ',
                     help='starting sequence of input')
 parser.add_argument('--cuda', action='store_true',
                     help='use CUDA')
-parser.add_argument('--temperature', type=float, default=.9,
+parser.add_argument('--temperature', type=float, default=.8,
                     help='temperature - higher will increase diversity')
 parser.add_argument('--log-interval', type=int, default=100,
                     help='reporting interval')
 args = parser.parse_args()
 
-print("Generating sentence fron %s model..."%(args.model_type))
+print("Generating sentence fron %s model ..."%(args.model_type))
 save_dir_path = args.save_dir + '/' + args.model_type + '_' #'./' +
 # Set the random seed manually for reproducibility.
 torch.manual_seed(args.seed)
@@ -48,12 +66,13 @@ if args.temperature < 1e-3:
 
 with open(save_dir_path + args.modelname, 'rb') as f:
     model = torch.load(f)
-model.eval()
 
 if args.cuda:
     model.cuda()
 else:
     model.cpu()
+
+model.eval()
 
 if not os.path.exists(save_dir_path + args.corpusname):
     corpus = data.Corpus(args)
@@ -66,8 +85,6 @@ else:
 
 ntokens = corpus.dictionary.__len__()
 hidden = model.init_hidden(1)
-if args.cuda:
-    input.data = input.data.cuda()
 
 if args.model_type == 'char':
     seperator = ''
@@ -77,7 +94,10 @@ else:
     input_tkns = corpus.tknzr.tokenize(args.startin)
     input = Variable(torch.LongTensor([corpus.dictionary.word2idx[word] for word in corpus.unk_tkn_handling(input_tkns)]), volatile=True)
 
-with open(args.outf, 'w') as outf:
+if args.cuda:
+    input.data = input.data.cuda()
+
+with open(args.model_type + '_' + args.outf, 'w') as outf:
     full_word = args.startin
     for i in range(args.words):
         # print(i)

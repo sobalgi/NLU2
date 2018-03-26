@@ -1,3 +1,17 @@
+'''
+
+NLU Assignment 2 : LSTM Based Character and Word Level Language Model Implementation
+
+Name  : Sourabh Balgi
+SR No : 14318
+Dept  : EE 
+Prog  : M Tech Systems Engineering
+Date  : 22-03-2018 9:00:00 PM
+
+'''
+
+# data.py : Gutenberg corpus (NLTK package) data processing
+
 import torch
 import nltk
 from nltk.corpus import gutenberg
@@ -74,6 +88,8 @@ class Dictionary(object):
 class Corpus(object):
     def __init__(self, args):
         super(Corpus, self).__init__()
+
+        self.args = args
 
         # Threshold count for unknown assignment
         self.threshold_unk_count = 2

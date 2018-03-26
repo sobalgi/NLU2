@@ -1,3 +1,17 @@
+'''
+
+NLU Assignment 2 : LSTM Based Character and Word Level Language Model Implementation
+
+Name  : Sourabh Balgi
+SR No : 14318
+Dept  : EE 
+Prog  : M Tech Systems Engineering
+Date  : 22-03-2018 9:00:00 PM
+
+'''
+
+# model.py : RNN/LSTM model definition file
+
 import torch.nn as nn
 from torch.autograd import Variable
 
