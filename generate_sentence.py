@@ -39,7 +39,7 @@ parser.add_argument('--outf', type=str, default='generated.txt',
                     help='output file for generated text')
 parser.add_argument('--words', type=int, default='100',
                     help='number of words to generate')
-parser.add_argument('--seed', type=int, default=566,
+parser.add_argument('--seed', type=int, default=369,
                     help='random seed')
 parser.add_argument('--startin', type=str, default='The ',
                     help='starting sequence of input')
@@ -98,7 +98,8 @@ if args.cuda:
     input.data = input.data.cuda()
 
 with open(args.model_type + '_' + args.outf, 'w') as outf:
-    full_word = args.startin
+    # full_word = args.startin
+    full_word = ''
     for i in range(args.words):
         # print(i)
         output, hidden = model(input, hidden)
