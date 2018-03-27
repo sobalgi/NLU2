@@ -43,6 +43,7 @@ optional arguments:
   --cuda                use CUDA
   --log-interval N      report interval
 
+
 2. Generate the sentences from saved models
 
 example: 
